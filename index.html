@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>404-valentine</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: #fdedee;
+    }
+
+    .page {
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      text-align: center;
+      position: relative;
+    }
+
+    .card {
+      width: min(520px, 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .top {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      transform: translateY(0px);
+      transition: transform 0.18s ease;
+      will-change: transform;
+    }
+
+    #cat {
+      width: min(280px, 75vw);
+      border-radius: 12px;
+      display: block;
+    }
+
+    #title {
+      margin: 0;
+      color: hotpink;
+      font-weight: 700;
+      font-size: clamp(20px, 5vw, 36px);
+      line-height: 1.15;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      margin-top: 6px;
+      min-height: 90px;
+      width: 100%;
+      position: relative;
+      z-index: 2;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 14px 34px;
+      font-size: 22px;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease, left 0.18s ease, top 0.18s ease;
+      white-space: nowrap;
+      touch-action: manipulation;
+      transform-origin: top center;
+    }
+
+    #yes {
+      background: #2ecc71;
+      color: #fff;
+    }
+
+    #no {
+      background: #e74c3c;
+      color: #fff;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page" id="page">
+    <div class="card">
+      <div class="top" id="top">
+        <img id="cat" src="images/cat_start.jpg" alt="cat">
+        <h2 id="title">Ar būsi mano Valentine?</h2>
+      </div>
+
+      <div class="buttons" id="buttons">
+        <button id="yes" type="button">Taip</button>
+        <button id="no" type="button">Ne</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const page = document.getElementById("page");
+    const topBox = document.getElementById("top");
+    const cat = document.getElementById("cat");
+    const yesBtn = document.getElementById("yes");
+    const noBtn = document.getElementById("no");
+    const buttons = document.getElementById("buttons");
+
+    const startImg = "images/cat_start.jpg";
+    const loveImg  = "images/cat_love.gif";
+    const noImgs = [
+      "images/no1.gif",
+      "images/no2.gif",
+      "images/no3.gif",
+      "images/no4.gif",
+      "images/no5.gif"
+    ];
+
+    const noTexts = [
+      "Ar tikrai?",
+      "Please...",
+      "Come on :(",
+      "Nu come on…",
+      "Gerai, paskutinis šansas"
+    ];
+
+    const noPositions = [
+      { left: "60%", top: "78%" },
+      { left: "15%", top: "55%" },
+      { left: "25%", top: "40%" },
+      { left: "85%", top: "55%" },
+      { left: "50%", top: "53%" }
+    ];
+
+    cat.src = startImg;
+
+    let noCount = 0;
+    let yesScale = 1;
+    let noScale = 1;
+    let noIsFloating = false;
+
+    // ✅ VISADA pakelta ~30px nuo originalios vietos
+    const BASE_TOP_LIFT = 30;
+
+    function adjustTopLift() {
+      const topRect = topBox.getBoundingClientRect();
+      const yesRect = yesBtn.getBoundingClientRect();
+
+      const minGap = 12;
+      const bottomPad = 10;
+
+      const overlapGap = minGap - (yesRect.top - topRect.bottom);
+      const overflowBottom = yesRect.bottom - (window.innerHeight - bottomPad);
+
+      let lift = Math.max(0, overlapGap, overflowBottom);
+      lift = Math.min(lift, 220);
+
+      // ✅ pridedam bazinį 30px pakėlimą, todėl nebegrįš žemyn
+      topBox.style.transform = `translateY(-${BASE_TOP_LIFT + lift}px)`;
+    }
+
+    function moveNo(index) {
+      if (!noIsFloating) {
+        noIsFloating = true;
+        noBtn.style.position = "fixed";
+        noBtn.style.zIndex = "10";
+      }
+      const pos = noPositions[Math.min(index, noPositions.length - 1)];
+      noBtn.style.left = pos.left;
+      noBtn.style.top  = pos.top;
+      noBtn.style.margin = "0";
+    }
+
+    function onNoClick() {
+      noCount++;
+
+      noBtn.textContent = noTexts[Math.min(noCount - 1, noTexts.length - 1)];
+      cat.src = noImgs[Math.min(noCount - 1, noImgs.length - 1)];
+
+      yesScale *= 1.4;
+      yesBtn.style.transform = `scale(${yesScale})`;
+
+      noScale -= 0.18;
+      noScale = Math.max(0.25, noScale);
+      noBtn.style.transform = `scale(${noScale})`;
+
+      moveNo(noCount - 1);
+
+      requestAnimationFrame(adjustTopLift);
+
+      if (noCount >= 5) {
+        buttons.style.transform = "translateY(-70px)";
+
+        noBtn.style.opacity = "0";
+        noBtn.style.pointerEvents = "none";
+
+        setTimeout(() => {
+          if (noBtn.parentNode) noBtn.remove();
+          requestAnimationFrame(adjustTopLift);
+        }, 160);
+      }
+    }
+
+    function onYesClick() {
+      page.innerHTML = `
+        <div class="card">
+          <div class="top" style="transform:none;">
+            <img src="${loveImg}" alt="love" style="width:min(280px,75vw);border-radius:12px;display:block;">
+            <h2 style="margin:0;color:hotpink;font-weight:700;font-size:clamp(22px,5vw,36px);line-height:1.15;">
+              Yayyy!! :3
+            </h2>
+          </div>
+        </div>
+      `;
+      document.body.style.background = "#fdedee";
+    }
+
+    noBtn.addEventListener("click", onNoClick);
+    yesBtn.addEventListener("click", onYesClick);
+
+    window.addEventListener("resize", () => requestAnimationFrame(adjustTopLift));
+
+    // ✅ iškart pakeliam startinę padėtį 30px
+    requestAnimationFrame(adjustTopLift);
+  </script>
+</body>
+</html>
